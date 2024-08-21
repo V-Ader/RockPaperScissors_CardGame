@@ -135,7 +135,7 @@ func (game *Game) sendEnemysMove() {
 
 func (game *Game) calculateResult() {
 	for i := 0; i < 3; i++ {
-		result1, result2 := gradeCards(game.Board.Seat1.CardSlots[i], game.Board.Seat1.CardSlots[i])
+		result1, result2 := gradeCards(game.Board.Seat1.CardSlots[i], game.Board.Seat2.CardSlots[i])
 		game.Board.Seat1.Points += result1
 		game.Board.Seat2.Points += result2
 	}
