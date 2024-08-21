@@ -21,7 +21,6 @@ type Cards struct {
 
 // contains user-sorted cards from enemys hand
 type Results struct {
-	Type  string
 	Cards []int
 }
 

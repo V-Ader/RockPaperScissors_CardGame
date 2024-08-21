@@ -28,3 +28,13 @@ func NewPlayer(conn *websocket.Conn, name string) *Player {
 		Deck: deck,
 	}
 }
+
+func (p *Player) Restarted() *Player {
+	for i := 0; i < 3; i++ {
+		p.Deck[i] = Rock
+		p.Deck[i+3] = Paper
+		p.Deck[i+6] = Scissors
+	}
+
+	return p
+}

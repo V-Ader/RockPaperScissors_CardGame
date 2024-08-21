@@ -2,6 +2,7 @@ package game
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -19,6 +20,7 @@ type Game struct {
 }
 
 func NewGame(player1 *Player, player2 *Player) *Game {
+	fmt.Println("new Game created")
 	return &Game{
 		Name:    utils.GenerateSizedId(2),
 		Player1: player1,
@@ -27,15 +29,13 @@ func NewGame(player1 *Player, player2 *Player) *Game {
 }
 
 func (game *Game) StartGame() {
-	game.sendPlayerDetailes()
-
 	game.Board = Board{
-		Seat1: NewSeat(game.Player1),
-		Seat2: NewSeat(game.Player2),
+		Seat1: NewSeat(game.Player1.Restarted()),
+		Seat2: NewSeat(game.Player2.Restarted()),
 	}
 
+	game.sendPlayerDetailes()
 	game.NewTurn()
-
 }
 
 func (game *Game) sendPlayerDetailes() {
@@ -91,7 +91,7 @@ func (game *Game) sendPlayersHands() {
 }
 
 func (game *Game) handleSeatMoves(wg *sync.WaitGroup, seat *Seat) {
-	var move Cards
+	var move Results
 	defer wg.Done()
 
 	for {

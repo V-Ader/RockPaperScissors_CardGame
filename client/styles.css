@@ -26,7 +26,7 @@ button {
 }
 
 .inputs-container {
-    display: none;
+    display: block;
     margin-top: 20px;
 }
 
@@ -38,4 +38,24 @@ button {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
+}
+
+#loginContainer h1 {
+    text-align: center;
+}
+
+.datafield-button {
+    display: flex;
+    flex-direction: row; 
+    align-items: center;
+    
+    input {
+        flex-grow: 1;
+        height: 75%;
+    }
+
+    button {
+        flex-grow: 1;
+        height: 75%;
+    }
 }

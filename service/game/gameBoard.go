@@ -37,14 +37,12 @@ func NewSeat(player *Player) *Seat {
 func (seat *Seat) GetNewHand() []int {
 	deckSize := len(seat.Player.Deck)
 	hand := make([]int, 3)
-	// fmt.Printf("player: %s, card used: %d\n", player.Name, player.CardUsed)
-
 	for i := 0; i < 3; i++ {
 		deckIndex := getRandomIndex(deckSize - i - 1 - seat.CardUsed)
-		// fmt.Printf("	DeckSize: %d, deckIndex: %d , card: %d\n", deckSize, deckIndex, player.Deck[deckIndex])
 
 		hand[i] = seat.Player.Deck[deckIndex]
-		seat.Player.Deck[deckIndex] = seat.Player.Deck[deckSize-1]
+		seat.Player.Deck[deckIndex] = seat.Player.Deck[deckSize-i-1-seat.CardUsed]
+		seat.Player.Deck[deckSize-i-1-seat.CardUsed] = -1
 
 	}
 	seat.CardUsed += 3

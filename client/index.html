@@ -7,12 +7,32 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Enter Player Name</h1>
-        <input type="text" id="playerName" placeholder="Player Name" />
-        <button onclick="connect()">Connect</button>
+    <div id="loginContainer">
+        <h1>New Game</h1>
+        <div class="datafield-button">
+            <input type="text" id="playerName" placeholder="Player Name" />
+            <button onclick="connect()">Connect</button>
+        </div>
 
-        <div class="inputs-container" id="inputsContainer">
+        <h1>Join Game</h1>
+        <div class="datafield-button">
+            <input type="text" id="playerInputName" placeholder="Player Name" />
+            <input type="text" id="gameInputId" placeholder="Game Id" />
+
+            <button onclick="reconnect()">Connect</button>
+        </div>
+    </div>
+
+    <div class="container" id="gameContainer" style="display: none;">
+
+        <h2>Avaible cards</h2>
+        <div class="hand-container">
+            <span class="hand-card" id="hand-card1"></span>
+            <span class="hand-card" id="hand-card2"></span>
+            <span class="hand-card" id="hand-card3"></span>
+        </div>
+        
+        <div class="inputs-container" id="inputsContainer">      
             <h2>Enter 3 Digits</h2>
             <input type="text" id="digit1" placeholder="Digit 1" />
             <input type="text" id="digit2" placeholder="Digit 2" />

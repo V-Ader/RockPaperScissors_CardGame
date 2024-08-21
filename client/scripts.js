@@ -11,6 +11,9 @@ function generateId() {
     );
 }
 
+function reconnect() {
+}
+
 function connect() {
     const playerName = document.getElementById('playerName').value;
 
@@ -48,16 +51,24 @@ function connect() {
         }
 
         if (message.Type === "GameInfo") {
+            console.log(message)
             playerId = message.PlayerId;
             gameId = message.GameId;
             document.getElementById('playerId').textContent = playerId;
             document.getElementById('gameId').textContent = gameId;
             document.getElementById('infoContainer').style.display = 'block';
         } else if (message.Type === "Cards") {
-            document.getElementById('inputsContainer').style.display = 'block';
-            document.getElementById('digit1').value = message.Cards[0];
-            document.getElementById('digit2').value = message.Cards[1];
-            document.getElementById('digit3').value = message.Cards[2];
+            console.log(message)
+            document.getElementById('loginContainer').style.display = 'none';
+
+            document.getElementById('gameContainer').style.display = 'block';
+            document.getElementById('hand-card1').textContent = message.Cards[0];
+            document.getElementById('hand-card2').textContent = message.Cards[1];
+            document.getElementById('hand-card3').textContent = message.Cards[2];
+
+            document.getElementById('digit1').value = null;
+            document.getElementById('digit2').value = null;
+            document.getElementById('digit3').value = null;
         }
     };
 
@@ -81,8 +92,11 @@ function sendDigits() {
     const digit2 = document.getElementById('digit2').value;
     const digit3 = document.getElementById('digit3').value;
 
-    const digits = [digit1, digit2, digit3];
-
-    ws.send(JSON.stringify(digits));
-    console.log('Sent digits:', digits);
+    const digits = [parseInt(digit1, 10), parseInt(digit2, 10), parseInt(digit3, 10)];
+    const data = {
+        Cards: digits
+    };
+    
+    ws.send(JSON.stringify(data));
+    console.log('Sent digits:', JSON.stringify(data));
 }
