@@ -196,9 +196,9 @@ func (game *Game) GameOver() {
 
 func (game *Game) getWinner() string {
 	if game.Board.Seat1.Points > game.Board.Seat2.Points {
-		return game.Player1.Name
+		return game.Player1.Id
 	}
-	return game.Player1.Name
+	return game.Player2.Id
 }
 
 func (game *Game) sendGameOverResults() {
