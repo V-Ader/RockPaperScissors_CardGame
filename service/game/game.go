@@ -42,15 +42,19 @@ func (game *Game) sendPlayerDetailes() {
 	message, _ := json.Marshal(&GameInfo{
 		Type: "GameInfo",
 
-		PlayerId: game.Player1.Id,
-		GameId:   game.Name,
+		PlayerId:   game.Player1.Id,
+		PlayerName: game.Player1.Name,
+		EnemyName:  game.Player2.Name,
+		GameId:     game.Name,
 	})
 	SendJson(game.Player1.Ws, string(message))
 	message, _ = json.Marshal(&GameInfo{
 		Type: "GameInfo",
 
-		PlayerId: game.Player2.Id,
-		GameId:   game.Name,
+		PlayerId:   game.Player2.Id,
+		PlayerName: game.Player2.Name,
+		EnemyName:  game.Player1.Name,
+		GameId:     game.Name,
 	})
 	SendJson(game.Player2.Ws, string(message))
 }
@@ -142,6 +146,7 @@ func (game *Game) calculateResult() {
 
 }
 
+//kamien, papier, nioz
 func gradeCards(c1 int, c2 int) (int, int) {
 	outcomes := [3][3]int{
 		{0, -1, 1},
@@ -195,6 +200,9 @@ func (game *Game) GameOver() {
 }
 
 func (game *Game) getWinner() string {
+	if game.Board.Seat1.Points == game.Board.Seat2.Points {
+		return "Draw"
+	}
 	if game.Board.Seat1.Points > game.Board.Seat2.Points {
 		return game.Player1.Id
 	}

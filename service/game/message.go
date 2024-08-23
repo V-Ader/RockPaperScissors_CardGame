@@ -8,9 +8,11 @@ import (
 )
 
 type GameInfo struct {
-	Type     string
-	PlayerId string
-	GameId   string
+	Type       string
+	PlayerId   string
+	PlayerName string
+	EnemyName  string
+	GameId     string
 }
 
 // contains user-sorted cards from his hand

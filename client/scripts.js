@@ -4,14 +4,22 @@ let gameId;
 let displayedCards = [];
 let selectedCards = [];
 
+let gameInfo = {
+    playerName: "",
+    enemyName: "",
+    playerPoints: 0,
+    enemyPoints: 0
+};
+
+const cardWidth = 100;
+const cardHeight = 150;
+
+
 const canvas = document.getElementById('gameCanvas');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 const ctx = canvas.getContext('2d');
-
-const cardWidth = 100;
-const cardHeight = 150;
 
 function resizeCanvas() {
     canvas.width = window.innerWidth * 0.9;
@@ -78,6 +86,8 @@ function handleMessage(message) {
     console.log("handleMessage", message);
     if (message.Type === "GameInfo") {
         handleGameInfo(message);
+    } else if (message.Type === "GameStatus") {
+        handleGameStatus(message);
     } else if (message.Type === "Cards") {
         handleCards(message.Cards);
     } else if (message.Type === "GameOverStatus") {
@@ -89,18 +99,24 @@ function handleGameInfo(message) {
     playerId = message.PlayerId;
     gameId = message.GameId;
 
-    document.getElementById('playerId').textContent = playerId;
-    document.getElementById('gameId').textContent = gameId;
-    document.getElementById('infoContainer').style.display = 'block';
+    gameInfo.playerName = message.PlayerName;
+    gameInfo.enemyName = message.EnemyName;
+
+    // document.getElementById('playerId').textContent = playerId;
+    // document.getElementById('gameId').textContent = gameId;
+    // document.getElementById('infoContainer').style.display = 'block';
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('gameContainer').style.display = 'block';
+}
+
+function handleGameStatus(message) {
+    gameInfo.playerPoints = message.PlayerPoints;
+    gameInfo.enemyPoints = message.EnemyPoints;
 }
 
 function handleCards(cards) {
     console.log("handleCards");
     selectedCards = [];
-
-    document.getElementById('loginContainer').style.display = 'none';
-    document.getElementById('gameContainer').style.display = 'block';
-
     displayedCards = cards;
     drawCardsOnCanvas();
 }
@@ -119,34 +135,77 @@ function handleGameOverStatus(message) {
     } else {
         resultMessage += ` You lost. You: ${playerPoints} points, Enemy: ${enemyPoints} points.`;
     }
+
+    gameInfo.playerPoints = 0;
+    gameInfo.enemyPoints = 0;
     drawResultFrame(resultMessage);
 }
 
 function drawCardsOnCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+
     displayedCards.forEach((card, index) => {
         drawCard(card, index);
     });
+
+    drawScores()
+
+    drawPlayButton()
+
+}
+
+function drawScores() {
+    ctx.fillStyle = 'black'; 
+    ctx.font = '20px Arial';
+
+    const score = gameInfo.playerPoints + " : " + gameInfo.enemyPoints;
+    const centerX = canvas.width / 2;
+    const positionY = 50; 
+    
+    ctx.fillText(score, centerX, positionY);
+}
+
+
+function drawPlayButton() {
+    const button = {
+        width: 150,
+        height: 40,
+        x: canvas.width / 2 - 150 / 2,
+        y: canvas.height - 40 * 1.5,
+    };
+    
+    ctx.fillStyle = 'white'; // Button background color
+    ctx.strokeStyle = 'black';  // Set the card border color
+    ctx.fillRect(button.x, button.y, button.width, button.height);
+    ctx.stroke();
+
+    ctx.fillStyle = 'black'; // Text color
+    ctx.font = '18px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Send!', button.x + button.width / 2, button.y + button.height / 2);
+
+    canvas.dataset.sendCardsButton = JSON.stringify({ x: button.x, y: button.y, width: button.width, height: button.height });
 }
 
 function getCardX(index) {
-    const margin = (window.innerWidth - 3 * cardWidth) / 4
-    return margin + index * (cardWidth + margin / 2);
+    const totalCardsWidth = 3 * cardWidth;
+    const totalMargin = canvas.width - totalCardsWidth;
+
+    const margin = totalMargin / 4;
+
+    return margin + index * (cardWidth + margin);
 }
+
 
 function getCardY() {
-    return ((window.innerHeight - 200 ) / 2);
-}
+    return (canvas.height * 0.5) - (cardHeight / 2); }
 
 function drawCard(card, index) {
-    const cardWidth = 100;
-    const cardHeight = 150;
-
     const cardX = getCardX(index);
     const cardY = getCardY();
     const cornerRadius = 10;
-    
 
     // Draw the card (rounded rectangle)
     ctx.fillStyle = 'white';  // Set the card background color
@@ -187,6 +246,7 @@ function drawCard(card, index) {
         ctx.fillText(selectedIndex + 1, cardX + cardWidth / 2, cardY + cardHeight + 20);
     }
 }
+
 
 
 function drawRoundedRect(ctx, x, y, width, height, radius) {
@@ -250,9 +310,12 @@ canvas.addEventListener('click', function(event) {
     const y = event.clientY - rect.top;
 
     // Check if the click is within the "Play Again" button
-    const button = canvas.dataset.playAgainButton ? JSON.parse(canvas.dataset.playAgainButton) : null;
-    if (button && x >= button.x && x <= button.x + button.width && y >= button.y && y <= button.y + button.height) {
+    const sendCardsButton = canvas.dataset.sendCardsButton ? JSON.parse(canvas.dataset.sendCardsButton) : null;
+    const playAgainButton = canvas.dataset.playAgainButton ? JSON.parse(canvas.dataset.playAgainButton) : null;
+    if (playAgainButton && x >= playAgainButton.x && x <= playAgainButton.x + playAgainButton.width && y >= playAgainButton.y && y <= playAgainButton.y + playAgainButton.height) {
         playAgain();
+    } else if (sendCardsButton && x >= sendCardsButton.x && x <= sendCardsButton.x + sendCardsButton.width && y >= sendCardsButton.y && y <= sendCardsButton.y + sendCardsButton.height) {
+        sendDigits();
     } else {
         // Check if any card was clicked
         displayedCards.forEach((card, index) => {
