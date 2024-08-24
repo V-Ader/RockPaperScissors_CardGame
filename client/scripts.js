@@ -144,15 +144,12 @@ function handleGameOverStatus(message) {
 function drawCardsOnCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-
     displayedCards.forEach((card, index) => {
         drawCard(card, index);
     });
 
     drawScores()
-
     drawPlayButton()
-
 }
 
 function drawScores() {
@@ -172,7 +169,7 @@ function drawPlayButton() {
         width: 150,
         height: 40,
         x: canvas.width / 2 - 150 / 2,
-        y: canvas.height - 40 * 1.5,
+        y: (canvas.height - 40) - 100,
     };
     
     ctx.fillStyle = 'white'; // Button background color
@@ -186,7 +183,7 @@ function drawPlayButton() {
     ctx.textBaseline = 'middle';
     ctx.fillText('Send!', button.x + button.width / 2, button.y + button.height / 2);
 
-    canvas.dataset.sendCardsButton = JSON.stringify({ x: button.x, y: button.y, width: button.width, height: button.height });
+    canvas.dataset.sendCardsButton = JSON.stringify({ x: button.x, y: button.y, width: button.width, height: button.height, active: true });
 }
 
 function getCardX(index) {
@@ -300,7 +297,7 @@ function drawResultFrame(message) {
     ctx.fillText('Play Again', canvas.width / 2, buttonY + buttonHeight / 2);
 
     // Save button position for click detection
-    canvas.dataset.playAgainButton = JSON.stringify({ x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight });
+    canvas.dataset.playAgainButton = JSON.stringify({ x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight, active: true });
 }
 
 
@@ -312,10 +309,13 @@ canvas.addEventListener('click', function(event) {
     // Check if the click is within the "Play Again" button
     const sendCardsButton = canvas.dataset.sendCardsButton ? JSON.parse(canvas.dataset.sendCardsButton) : null;
     const playAgainButton = canvas.dataset.playAgainButton ? JSON.parse(canvas.dataset.playAgainButton) : null;
-    if (playAgainButton && x >= playAgainButton.x && x <= playAgainButton.x + playAgainButton.width && y >= playAgainButton.y && y <= playAgainButton.y + playAgainButton.height) {
+    if (isButtonClicked(playAgainButton, x, y)) {
         playAgain();
-    } else if (sendCardsButton && x >= sendCardsButton.x && x <= sendCardsButton.x + sendCardsButton.width && y >= sendCardsButton.y && y <= sendCardsButton.y + sendCardsButton.height) {
+        playAgainButton.active = false
+        sendCardsButton.active = false
+    } else if (isButtonClicked(sendCardsButton, x, y)) {
         sendDigits();
+        sendCardsButton.active = false;
     } else {
         // Check if any card was clicked
         displayedCards.forEach((card, index) => {
@@ -328,6 +328,13 @@ canvas.addEventListener('click', function(event) {
         });
     }
 });
+
+function isButtonClicked(button, x, y) {
+    console.log(button)
+    return button && button.active &&
+     x >= button.x && x <= button.x + button.width &&
+      y >= button.y && y <= button.y + button.height
+}
 
 function selectCard(index) {
     if (selectedCards.indexOf(index) === -1 && selectedCards.length < 3) {
@@ -361,7 +368,7 @@ function playAgain() {
 
     const data = {
         Type: 'PlayAgain',
-        Cards: [] // Empty array to start a new game
+        Message: "Play" // Empty array to start a new game
     };
 
     ws.send(JSON.stringify(data));

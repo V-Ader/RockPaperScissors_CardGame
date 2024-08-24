@@ -26,6 +26,11 @@ type Results struct {
 	Cards []int
 }
 
+type Info struct {
+	Type    string
+	Message string
+}
+
 type GameStatus struct {
 	Type         string
 	PlayerPoints int

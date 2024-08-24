@@ -116,12 +116,26 @@ func (game *Game) handleSeatMoves(wg *sync.WaitGroup, seat *Seat) {
 			continue
 		}
 
-		// todo: validate move
-		//
+		if isValid(move) {
+			seat.CardSlots = move.Cards
+			break
+		} else {
+			game.sendInvalidInfo(seat.Player.Ws)
+		}
 
-		seat.CardSlots = move.Cards
-		break
 	}
+}
+
+func isValid(move Results) bool {
+	return len(move.Cards) == 3
+}
+
+func (game *Game) sendInvalidInfo(ws *websocket.Conn) {
+	message, _ := json.Marshal(&Info{
+		Type:    "Error",
+		Message: "Invalid move",
+	})
+	SendJson(ws, string(message))
 }
 
 func (game *Game) sendEnemysMove() {
@@ -143,10 +157,8 @@ func (game *Game) calculateResult() {
 		game.Board.Seat1.Points += result1
 		game.Board.Seat2.Points += result2
 	}
-
 }
 
-//kamien, papier, nioz
 func gradeCards(c1 int, c2 int) (int, int) {
 	outcomes := [3][3]int{
 		{0, -1, 1},
@@ -191,12 +203,25 @@ func (game *Game) GameOver() {
 	wg := new(sync.WaitGroup)
 	wg.Add(2)
 
-	go game.handleSeatMoves(wg, game.Board.Seat1)
-	go game.handleSeatMoves(wg, game.Board.Seat2)
+	go game.handleSeatNewGameResponse(wg, game.Board.Seat1)
+	go game.handleSeatNewGameResponse(wg, game.Board.Seat2)
 
 	wg.Wait()
 
-	game.StartGame()
+	if game.Board.Seat1.IsConnected && game.Board.Seat2.IsConnected {
+		game.StartGame()
+	}
+}
+
+func (game *Game) handleSeatNewGameResponse(wg *sync.WaitGroup, seat *Seat) {
+	var message Info
+	defer wg.Done()
+
+	err := seat.Player.Ws.ReadJSON(&message)
+	if err != nil {
+		log.Println("Error reading message:", err)
+		seat.IsConnected = false
+	}
 }
 
 func (game *Game) getWinner() string {
