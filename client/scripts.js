@@ -11,9 +11,10 @@ let gameInfo = {
     enemyPoints: 0
 };
 
-const cardWidth = 100;
-const cardHeight = 150;
-
+let card_model = {
+    width: 100,
+    height: 150
+}
 
 const canvas = document.getElementById('gameCanvas');
 canvas.width = window.innerWidth;
@@ -115,7 +116,6 @@ function handleGameStatus(message) {
 }
 
 function handleCards(cards) {
-    console.log("handleCards");
     selectedCards = [];
     displayedCards = cards;
     drawCardsOnCanvas();
@@ -149,7 +149,7 @@ function drawCardsOnCanvas() {
     });
 
     drawScores()
-    drawPlayButton()
+    drawPlayButton(false)
 }
 
 function drawScores() {
@@ -164,83 +164,97 @@ function drawScores() {
 }
 
 
-function drawPlayButton() {
+function drawPlayButton(clicked = false) {
     const button = {
         width: 150,
         height: 40,
         x: canvas.width / 2 - 150 / 2,
         y: (canvas.height - 40) - 100,
+        borderRadius: 10
     };
-    
-    ctx.fillStyle = 'white'; // Button background color
-    ctx.strokeStyle = 'black';  // Set the card border color
-    ctx.fillRect(button.x, button.y, button.width, button.height);
+
+    ctx.beginPath();
+    ctx.moveTo(button.x + button.borderRadius, button.y);
+    ctx.lineTo(button.x + button.width - button.borderRadius, button.y);
+    ctx.arcTo(button.x + button.width, button.y, button.x + button.width, button.y + button.borderRadius, button.borderRadius);
+    ctx.lineTo(button.x + button.width, button.y + button.height - button.borderRadius);
+    ctx.arcTo(button.x + button.width, button.y + button.height, button.x + button.width - button.borderRadius, button.y + button.height, button.borderRadius);
+    ctx.lineTo(button.x + button.borderRadius, button.y + button.height);
+    ctx.arcTo(button.x, button.y + button.height, button.x, button.y + button.height - button.borderRadius, button.borderRadius);
+    ctx.lineTo(button.x, button.y + button.borderRadius);
+    ctx.arcTo(button.x, button.y, button.x + button.borderRadius, button.y, button.borderRadius);
+    ctx.closePath();
+
+    // Change the color based on whether the button is clicked or not
+    ctx.fillStyle = clicked ? 'green' : 'white';
+    ctx.fill();
+
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.fillStyle = 'black'; // Text color
+    ctx.fillStyle = 'black';
     ctx.font = '18px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('Send!', button.x + button.width / 2, button.y + button.height / 2);
 
+    // Store the button's position and dimensions in the canvas dataset
     canvas.dataset.sendCardsButton = JSON.stringify({ x: button.x, y: button.y, width: button.width, height: button.height, active: true });
 }
 
-function getCardX(index) {
-    const totalCardsWidth = 3 * cardWidth;
-    const totalMargin = canvas.width - totalCardsWidth;
 
+
+function getCardX(index) {
+    const totalCardsWidth = 3 * card_model.width;
+    const totalMargin = canvas.width - totalCardsWidth;
     const margin = totalMargin / 4;
 
-    return margin + index * (cardWidth + margin);
+    return margin + index * (card_model.width + margin);
 }
 
 
 function getCardY() {
-    return (canvas.height * 0.5) - (cardHeight / 2); }
+    return (canvas.height * 0.5) - (card_model.height / 2); }
 
 function drawCard(card, index) {
     const cardX = getCardX(index);
+    console.log(cardX, card)
     const cardY = getCardY();
     const cornerRadius = 10;
 
-    // Draw the card (rounded rectangle)
-    ctx.fillStyle = 'white';  // Set the card background color
-    ctx.strokeStyle = 'black';  // Set the card border color
+    ctx.fillStyle = 'white';  
+    ctx.strokeStyle = 'black';
     ctx.lineWidth = 2;
-    drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, cornerRadius);
+    drawRoundedRect(ctx, cardX, cardY, card_model.width, card_model.height, cornerRadius);
 
-    // Set the text style and color before drawing the icon
-    ctx.fillStyle = 'black';  // Set the text color
-    ctx.font = '50px Arial';  // Increase font size for emoji
+    ctx.fillStyle = 'black';  
+    ctx.font = '50px Arial';  
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Determine the icon to display based on the card value
     let icon;
     switch(card) {
         case 1:
-            icon = '✊';  // Rock
+            icon = '✊';  
             break;
         case 2:
-            icon = '✋';  // Paper
+            icon = '✋';  
             break;
         case 3:
-            icon = '✌';  // Scissors
+            icon = '✌';  
             break;
         default:
-            icon = '';  // Default if card is not 1, 2, or 3
+            icon = '';  
     }
 
-    // Draw the icon in the center of the card
-    ctx.fillText(icon, cardX + cardWidth / 2, cardY + cardHeight / 2);
+    ctx.fillText(icon, cardX + card_model.width / 2, cardY + card_model.height / 2);
 
-    // If the card is selected, draw the selection order below the card
     const selectedIndex = selectedCards.indexOf(index);
     if (selectedIndex !== -1) {
-        ctx.fillStyle = 'black'; // Set color for the selection number
-        ctx.font = '20px Arial';  // Smaller font for the selection number
-        ctx.fillText(selectedIndex + 1, cardX + cardWidth / 2, cardY + cardHeight + 20);
+        ctx.fillStyle = 'black'; 
+        ctx.font = '20px Arial'; 
+        ctx.fillText(selectedIndex + 1, cardX + card_model.width / 2, cardY + card_model.height + 20);
     }
 }
 
@@ -264,7 +278,7 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
 
 function drawResultFrame(message) {
     const frameWidth = canvas.width - 40;
-    const frameHeight = 130; // Increased height for the button
+    const frameHeight = 130;
     const frameX = 20;
     const frameY = canvas.height - frameHeight - 20;
     const buttonWidth = 150;
@@ -272,31 +286,25 @@ function drawResultFrame(message) {
     const buttonX = (canvas.width - buttonWidth) / 2;
     const buttonY = frameY + frameHeight - buttonHeight - 10;
 
-    // Clear the area where the frame will be drawn
     ctx.clearRect(frameX, frameY, frameWidth, frameHeight);
 
-    // Draw the frame background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';  // Semi-transparent black
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
     ctx.fillRect(frameX, frameY, frameWidth, frameHeight);
 
-    // Set the text style
-    ctx.fillStyle = 'white';  // Text color
+    ctx.fillStyle = 'white';  
     ctx.font = '20px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Display the message in the center of the frame
     ctx.fillText(message, canvas.width / 2, frameY + frameHeight / 2 - 20);
 
-    // Draw the "Play Again" button
-    ctx.fillStyle = 'green';  // Button background color
+    ctx.fillStyle = 'green';
     ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
 
-    ctx.fillStyle = 'white';  // Button text color
+    ctx.fillStyle = 'white';
     ctx.font = '18px Arial';
     ctx.fillText('Play Again', canvas.width / 2, buttonY + buttonHeight / 2);
 
-    // Save button position for click detection
     canvas.dataset.playAgainButton = JSON.stringify({ x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight, active: true });
 }
 
@@ -314,6 +322,7 @@ canvas.addEventListener('click', function(event) {
         playAgainButton.active = false
         sendCardsButton.active = false
     } else if (isButtonClicked(sendCardsButton, x, y)) {
+        drawPlayButton(true);
         sendDigits();
         sendCardsButton.active = false;
     } else {
@@ -322,7 +331,7 @@ canvas.addEventListener('click', function(event) {
             const cardX = getCardX(index);
             const cardY = getCardY();
 
-            if (x >= cardX && x <= cardX + cardWidth && y >= cardY && y <= cardY + cardHeight) {
+            if (x >= cardX && x <= cardX + card_model.width && y >= cardY && y <= cardY + card_model.height) {
                 selectCard(index);
             }
         });
@@ -374,7 +383,6 @@ function playAgain() {
     ws.send(JSON.stringify(data));
     console.log('Sent Play Again message:', JSON.stringify(data));
 
-    // Optionally, you can clear the canvas or reset the game state here
     document.getElementById('gameContainer').style.display = 'none';
     document.getElementById('loginContainer').style.display = 'block';
 }
