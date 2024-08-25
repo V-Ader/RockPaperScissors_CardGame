@@ -46,7 +46,7 @@ type GameOverStatus struct {
 
 func SendJson(conn *websocket.Conn, json string) {
 	if err := conn.WriteJSON(json); err != nil {
-		log.Println(err)
+		log.Printf("SendJson error: %s", err.Error())
 		return
 	}
 }

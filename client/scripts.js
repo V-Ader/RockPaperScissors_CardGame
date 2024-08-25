@@ -16,6 +16,28 @@ let card_model = {
     height: 150
 }
 
+function supportsLocalStorage() {
+    return typeof(Storage)!== 'undefined';
+}
+  
+if (!supportsLocalStorage()) {
+    console.log('supportsLocalStorage is false');
+} else {
+    console.log('supportsLocalStorage is true');
+}
+
+const storedData = {
+    playerId: localStorage.getItem('playerId'),
+    gameId: localStorage.getItem('gameId')
+}
+
+console.log('Game ID is:', storedData.playerId);
+console.log('player ID is:', storedData.gameId);
+
+if (storedData.playerId && storedData.gameId) {
+    reconnectConnection(storedData.playerId, storedData.gameId)
+}
+
 const canvas = document.getElementById('gameCanvas');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -43,7 +65,7 @@ function connect() {
     }
 
     const connection = {
-        ConnectionType: "Join",
+        ConnectionType: "join",
         PlayerId: "",
         PlayerName: playerName,
         GameId: ""
@@ -83,6 +105,62 @@ function connect() {
     };
 }
 
+function reconnect() {
+    const playerId = document.getElementById('playerInputId').value;
+    const gameId = document.getElementById('gameInputId').value;
+
+    reconnectConnection(playerId, gameId)
+}
+
+function reconnectConnection(playerId, gameId) {
+    if (!playerId || !gameId) {
+        alert('Please enter a player name');
+        return;
+    }
+
+    const connection = {
+        ConnectionType: "reconnect",
+        PlayerId: playerId,
+        PlayerName: "",
+        GameId: gameId
+    };
+
+    ws = new WebSocket('ws://localhost:8080/ws');
+
+    ws.onopen = function() {
+        console.log('WebSocket connection opened');
+        ws.send(JSON.stringify(connection));
+    };
+
+    ws.onmessage = function(event) {
+        console.log('Message from server:', event.data);
+
+        let message;
+        try {
+            message = JSON.parse(event.data);
+            if (typeof message === 'string') {
+                message = JSON.parse(message);
+            }
+        } catch (e) {
+            console.error('Error parsing message:', e);
+            return;
+        }
+
+        handleMessage(message);
+    };
+
+    ws.onclose = function() {
+        console.log('WebSocket connection closed');
+    };
+
+    ws.onerror = function(error) {
+        console.error('WebSocket error:', error);
+        alert('WebSocket error');
+    };
+
+}
+
+
 function handleMessage(message) {
     console.log("handleMessage", message);
     if (message.Type === "GameInfo") {
@@ -100,12 +178,15 @@ function handleGameInfo(message) {
     playerId = message.PlayerId;
     gameId = message.GameId;
 
+    localStorage.setItem('playerId', playerId);
+    localStorage.setItem('gameId', gameId);
+
     gameInfo.playerName = message.PlayerName;
     gameInfo.enemyName = message.EnemyName;
 
-    // document.getElementById('playerId').textContent = playerId;
-    // document.getElementById('gameId').textContent = gameId;
-    // document.getElementById('infoContainer').style.display = 'block';
+    document.getElementById('playerId').textContent = playerId;
+    document.getElementById('gameId').textContent = gameId;
+    document.getElementById('infoContainer').style.display = 'block';
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('gameContainer').style.display = 'block';
 }

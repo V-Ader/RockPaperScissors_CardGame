@@ -1,8 +1,11 @@
 package game
 
 import (
+	"fmt"
 	"log"
 	"sync"
+
+	"slices"
 )
 
 type Lobby struct {
@@ -46,4 +49,20 @@ func (lobby *Lobby) StartNewGame(player *Player) {
 
 	newGame.StartGame()
 	log.Println("new Game created")
+}
+
+func (lobby *Lobby) Reconnect(player *Player, gameName string) {
+	gameId := slices.IndexFunc(lobby.games, func(game *Game) bool { return game.Name == gameName })
+	fmt.Printf("gameId: %d\n", gameId)
+
+	if gameId != -1 {
+		err := lobby.games[gameId].ReconnectPlayer(player)
+		if err != nil {
+			SendMessage(player.Ws, err.Error())
+		} else {
+			//send reconnect package
+		}
+	} else {
+		SendMessage(player.Ws, "no game to reconnect")
+	}
 }

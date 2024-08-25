@@ -39,6 +39,11 @@ func (game *Game) StartGame() {
 }
 
 func (game *Game) sendPlayerDetailes() {
+	game.sendPlayer1Detailes()
+	game.sendPlayer2Detailes()
+}
+
+func (game *Game) sendPlayer1Detailes() {
 	message, _ := json.Marshal(&GameInfo{
 		Type: "GameInfo",
 
@@ -48,7 +53,10 @@ func (game *Game) sendPlayerDetailes() {
 		GameId:     game.Name,
 	})
 	SendJson(game.Player1.Ws, string(message))
-	message, _ = json.Marshal(&GameInfo{
+}
+
+func (game *Game) sendPlayer2Detailes() {
+	message, _ := json.Marshal(&GameInfo{
 		Type: "GameInfo",
 
 		PlayerId:   game.Player2.Id,
@@ -61,6 +69,8 @@ func (game *Game) sendPlayerDetailes() {
 
 func (game *Game) NewTurn() {
 	for !game.isEnd() {
+		game.setPlayersHands()
+
 		game.sendPlayersHands()
 
 		wg := new(sync.WaitGroup)
@@ -81,15 +91,28 @@ func (game *Game) NewTurn() {
 	game.GameOver()
 }
 
+func (game *Game) setPlayersHands() {
+	game.Board.Seat1.CardSlots = game.Board.Seat1.GetNewHand()
+	game.Board.Seat2.CardSlots = game.Board.Seat2.GetNewHand()
+}
+
 func (game *Game) sendPlayersHands() {
+	game.sendPlayer1Hands()
+	game.sendPlayer2Hands()
+}
+
+func (game *Game) sendPlayer1Hands() {
 	message, _ := json.Marshal(&Cards{
 		Type:  "Cards",
-		Cards: game.Board.Seat1.GetNewHand(),
+		Cards: game.Board.Seat1.CardSlots,
 	})
 	SendJson(game.Player1.Ws, string(message))
-	message, _ = json.Marshal(&Cards{
+}
+
+func (game *Game) sendPlayer2Hands() {
+	message, _ := json.Marshal(&Cards{
 		Type:  "Cards",
-		Cards: game.Board.Seat2.GetNewHand(),
+		Cards: game.Board.Seat2.CardSlots,
 	})
 	SendJson(game.Player2.Ws, string(message))
 }
@@ -179,13 +202,21 @@ func gradeCards(c1 int, c2 int) (int, int) {
 }
 
 func (game *Game) sendResults() {
+	game.sendPlayer1Results()
+	game.sendPlayer2Results()
+}
+
+func (game *Game) sendPlayer1Results() {
 	message, _ := json.Marshal(&GameStatus{
 		Type:         "GameStatus",
 		PlayerPoints: game.Board.Seat1.Points,
 		EnemyPoints:  game.Board.Seat2.Points,
 	})
 	SendJson(game.Player1.Ws, string(message))
-	message, _ = json.Marshal(&GameStatus{
+}
+
+func (game *Game) sendPlayer2Results() {
+	message, _ := json.Marshal(&GameStatus{
 		Type:         "GameStatus",
 		PlayerPoints: game.Board.Seat2.Points,
 		EnemyPoints:  game.Board.Seat1.Points,
@@ -251,14 +282,39 @@ func (game *Game) sendGameOverResults() {
 	SendJson(game.Player2.Ws, string(message))
 }
 
-// func (game *Game) playerReconnected(seat *Seat, newWs *websocket.Conn) {
-// 	seat.Player.Ws = newWs
-// 	seat.IsConnected = true
-// 	log.Println("Player reconnected.")
-// }
+func (game *Game) ReconnectPlayer(player *Player) error {
+	if game.Board.Seat1.Player.Id == player.Id {
+		player.Name = game.Board.Seat1.Player.Name
+		game.Board.Seat1.Player = player
+		game.Player1 = player
+		game.Board.Seat1.IsConnected = true
 
-// func (game *Game) ReconnectPlayer(seat *Seat, newWs *websocket.Conn) {
-//     seat.Player.Ws = newWs
-//     seat.IsConnected = true
-//     log.Println("Player reconnected.")
-// }
+		game.SendReconnectPackageP1()
+		return nil
+	} else if game.Board.Seat2.Player.Id == player.Id {
+		player.Name = game.Board.Seat2.Player.Name
+		game.Board.Seat2.Player = player
+		game.Player2 = player
+		game.Board.Seat2.IsConnected = true
+
+		game.SendReconnectPackageP2()
+		return nil
+	}
+	return fmt.Errorf("seat not found")
+}
+
+func (game *Game) SendReconnectPackageP1() {
+	SendMessage(game.Board.Seat1.Player.Ws, "OK")
+	game.sendPlayer1Detailes()
+	game.sendPlayer1Results()
+	game.sendPlayer1Hands()
+
+}
+
+func (game *Game) SendReconnectPackageP2() {
+	SendMessage(game.Board.Seat2.Player.Ws, "OK")
+
+	game.sendPlayer2Detailes()
+	game.sendPlayer2Results()
+	game.sendPlayer2Hands()
+}

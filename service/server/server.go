@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -39,10 +40,13 @@ func handleConnection(conn *websocket.Conn) {
 	}
 
 	// handle game connection
+	newPlayer := game.NewPlayer(conn, newConnectionMessage.PlayerName)
+
 	if newConnectionMessage.ConnectionType == "reconnect" {
-		// todo replace ws on gameId
+		fmt.Println("reconnect")
+		newPlayer.Id = newConnectionMessage.PlayerId
+		go lobby.Reconnect(newPlayer, newConnectionMessage.GameId)
 	} else {
-		newPlayer := game.NewPlayer(conn, newConnectionMessage.PlayerName)
 		if lobby.HasPlayerWaiting() {
 			go lobby.StartNewGame(newPlayer)
 		} else {
