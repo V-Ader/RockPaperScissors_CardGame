@@ -184,9 +184,6 @@ function handleGameInfo(message) {
     gameInfo.playerName = message.PlayerName;
     gameInfo.enemyName = message.EnemyName;
 
-    document.getElementById('playerId').textContent = playerId;
-    document.getElementById('gameId').textContent = gameId;
-    document.getElementById('infoContainer').style.display = 'block';
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('gameContainer').style.display = 'block';
 }
@@ -250,7 +247,7 @@ function drawPlayButton(clicked = false) {
         width: 150,
         height: 40,
         x: canvas.width / 2 - 150 / 2,
-        y: (canvas.height - 40) - 100,
+        y: (canvas.height - 40) - 50,
         borderRadius: 10
     };
 
